@@ -1,57 +1,38 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Nov  6 14:58:36 2022
+from PipelineConfiguration import PipelineConfiguation
+from Pipeline import Pipeline
 
-@author: adamr
-"""
-#Stop CUDA from taking over
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+three_model_weights  = [[0.05, 0.05, 0.9],
+                        [0.1, 0.1, 0.8],
+                        [0.15, 0.15, 0.7],
+                        [0.2, 0.2, 0.6],
+                        [0.25, 0.25, 0.5]]
 
-#Import other required libraries
-from DatasetBuilderV2 import DatasetBuilderV2
-from ModelTrainerV2 import ModelTrainerV2
-from SentimentClassifier import SentimentClassifier
-from tensorflow.keras import callbacks
-import time
+two_model_weights = [[0.1, 0.9],
+                     [0.2, 0.8],
+                     [0.3, 0.7],
+                     [0.4, 0.6],
+                     [0.5, 0.5]]
 
-#Global variables
-lookup_link= r'https://drive.google.com/file/d/1vYd_Q9hdnssV2xWT8694v-j3KodWwrUr/view'
-image_folder_path = r'C:\Users\adamr\Documents\UniversityWork\COMP591\Data\image'
-mapping_path = r'C:\Users\adamr\Documents\UniversityWork\COMP591\Data\JSON-Image_files_mapping.txt'
-opinion_lexicon_neg_path = r'C:\Users\adamr\Documents\UniversityWork\COMP591\Opinion Lexicon\negative-words.txt'
-opinion_lexicon_pos_path = r'C:\Users\adamr\Documents\UniversityWork\COMP591\Opinion Lexicon\positive-words.txt'
+#Ensemble lists
+two_model_ensemble_list = [['rf', 'inception'],
+                           ['svc', 'inception'],
+                           ['inception', 'effinet'],
+                           ['rf', 'effinet'],
+                           ['svc', 'effinet']]
 
-#def main():
-start_time = time.time()
-builder = DatasetBuilderV2(lookup_link, mapping_path, image_folder_path)
-x_train, x_test, y_train, y_test, encoders, df = builder.generate_dataset(1000)
+three_model_ensemble_list = [['cnn', 'effinet', 'inception'],
+                             ['rf', 'svc', 'inception'],
+                             ['rf', 'svc', 'effinet']]
 
-earlystopping = callbacks.EarlyStopping(monitor ="val_loss", 
-                                        mode ="min", patience = 4, 
-                                        restore_best_weights = True)
-            
-trainer = ModelTrainerV2(x_train, x_test, y_train, y_test)
-traditional_models = trainer.train_all_models()
-# cnn = trainer._configure_cnn_model(2)
-# cnn.fit(x_train, y_train , epochs=35, batch_size=32, verbose=1, validation_split=0.12, callbacks =[earlystopping])
+class_list = ['Beauty', 'Family', 'Fashion', 'Fitness', 'Food', 'Interior','Pet', 'Travel']
 
-print("--- %s seconds ---" % (time.time() - start_time))
-    
+data_dir = r'C:\Users\adamr\Documents\UniversityWork\COMP591\Data\Dataset'
+output_dir = r'C:\Users\adamr\Documents\UniversityWork\COMP591\Data\Results\\'
 
-#main()
-    
-    
-    
-    
-    
-# sentimentClassifier = SentimentClassifier(opinion_lexicon_pos_path, opinion_lexicon_neg_path)
-# setniment = sentimentClassifier.classifiy_sentiment('The movie was very bad', 'vader')
+def main():
+    config = PipelineConfiguation(class_list, data_dir, output_dir, two_model_ensemble_list, two_model_weights, three_model_ensemble_list, three_model_weights)
+    pipeline = Pipeline(config)
+    results, two_model_results, three_model_results = pipeline.run()
+    return results, two_model_results, three_model_results
 
-
-
-
-
-
-
-
+results = main()
